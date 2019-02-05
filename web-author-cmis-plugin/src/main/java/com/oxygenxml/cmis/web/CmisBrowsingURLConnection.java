@@ -139,14 +139,17 @@ public class CmisBrowsingURLConnection extends FilterURLConnection {
 
 		for (CmisObject obj : ((Folder) parent).getChildren()) {
 			if (obj instanceof Document) {
-
-				Boolean isPrivateWorkingCopy = ((Document) obj).isPrivateWorkingCopy();
-
-				if (isPrivateWorkingCopy != null) {
-					if (isPrivateWorkingCopy) {
-						continue;
-					}
+				Document doc = (Document ) obj;
+				Boolean isPrivateWorkingCopy = doc.isPrivateWorkingCopy();
+				
+				if (isPrivateWorkingCopy != null && isPrivateWorkingCopy) {
+					continue;
 				}
+				// In case if isPrivateWorkingCopy is null.
+				if (isPrivateWorkingCopy == null && checkPWCForAlfresco(doc)) {
+					continue;
+				}
+				
 			}
 
 			String parentPath = this.getURL().getPath();
@@ -162,6 +165,19 @@ public class CmisBrowsingURLConnection extends FilterURLConnection {
 		folderEntryLogger(list);
 	}
 
+	/**
+	 * If isPrivateWorkingCopy result is null we check 
+	 * document using isVersionSeriesPrivateWorkingCopy.
+	 * (In case if server doesn't support isPWC, ex. Alfresco).
+	 * 
+	 * @param doc Current document.
+	 * @return true if is Version Series PWC else false.
+	 */
+	private boolean checkPWCForAlfresco(Document doc) {
+		Boolean isVersionSeriesPWC = doc.isVersionSeriesPrivateWorkingCopy();
+		return isVersionSeriesPWC != null && isVersionSeriesPWC;
+	}
+	
 	/**
 	 * Add Repository url into FolderEntryDescriptor list
 	 * 
